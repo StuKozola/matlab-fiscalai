@@ -12,6 +12,7 @@ Use the `fiscalai` package namespace, for example `src/+fiscalai/FiscalAIClient.
 - `matlab -batch "addpath('src'); results = runtests('tests/FiscalAIClientTest.m'); assertSuccess(results)"` runs CI-safe tests.
 - `matlab -batch "addpath('src'); results = runtests('tests/FiscalAIIntegrationTest.m'); assertSuccess(results)"` runs live tests when an API key is available.
 - `matlab -batch "addpath('tools'); packageToolbox"` writes `output/matlab-fiscalai.mltbx`.
+- `matlab -batch "addpath('tools'); runCoverage"` writes `coverage-report/`.
 - `matlab -batch "checkcode('src/+fiscalai/FiscalAIClient.m','-cyc')"` runs MATLAB Code Analyzer checks, including cyclomatic complexity.
 - `matlab -batch "run('examples/exampleName.m')"` runs a specific example script locally.
 

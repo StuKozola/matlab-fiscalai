@@ -36,7 +36,18 @@ jobs:
       - name: Run Code Analyzer
         uses: matlab-actions/run-command@v2
         with:
-          command: issues = [checkcode('src/+fiscalai/FiscalAIClient.m','-struct'); checkcode('tests/FiscalAIClientTest.m','-struct'); checkcode('tests/FiscalAIIntegrationTest.m','-struct'); checkcode('tests/helpers/MockTransport.m','-struct'); checkcode('tools/packageToolbox.m','-struct'); checkcode('tools/smokeFiscalAI.m','-struct')]; assert(isempty(issues), evalc('disp(issues)'))
+          command: issues = [checkcode('src/+fiscalai/FiscalAIClient.m','-struct'); checkcode('tests/FiscalAIClientTest.m','-struct'); checkcode('tests/FiscalAIIntegrationTest.m','-struct'); checkcode('tests/helpers/MockTransport.m','-struct'); checkcode('tools/generateMethodDocs.m','-struct'); checkcode('tools/packageToolbox.m','-struct'); checkcode('tools/runCoverage.m','-struct'); checkcode('tools/smokeFiscalAI.m','-struct')]; assert(isempty(issues), evalc('disp(issues)'))
+
+      - name: Generate coverage report
+        uses: matlab-actions/run-command@v2
+        with:
+          command: addpath('tools'); runCoverage('coverage-report')
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report
 
   live-integration:
     if: github.event_name == 'workflow_dispatch' && inputs.run_integration

@@ -74,12 +74,14 @@ classdef FiscalAIClientTest < matlab.unittest.TestCase
 
         function testFinancialMetricValuesFlattenToTable(testCase)
             transport = MockTransport(FiscalAIClientTest.response(200, ...
-                '{"metrics":[{"standardizedMetricId":"revenue"}],"data":[{"periodType":"Annual","metricsValues":{"revenue":{"value":10,"currency":"USD"},"grossProfit":{"value":4,"currency":"USD"}}},{"periodType":"Quarterly","metricsValues":{"revenue":{"value":3,"currency":"USD"}}}]}'));
-            client = fiscalai.FiscalAIClient(ApiKey="test-key", Transport=@transport.send);
+                '{"metrics":[{"standardizedMetricId":"revenue"}],"data":[{"periodType":"Annual","reportDate":"2026-03-15","metricsValues":{"revenue":{"value":10,"currency":"USD"},"grossProfit":{"value":4,"currency":"USD"}}},{"periodType":"Quarterly","reportDate":"2026-06-15","metricsValues":{"revenue":{"value":3,"currency":"USD"}}}]}'));
+            client = fiscalai.FiscalAIClient( ...
+                ApiKey="test-key", Transport=@transport.send, NormalizeTypes=true);
 
             result = client.standardizedIncomeStatement(CompanyKey="NASDAQ_MSFT");
 
             testCase.verifyClass(result.data, "table");
+            testCase.verifyClass(result.data.reportDate, "datetime");
             testCase.verifyEqual(result.data.revenue(1), 10);
             testCase.verifyEqual(result.data.grossProfit(2), NaN);
         end
@@ -147,6 +149,33 @@ classdef FiscalAIClientTest < matlab.unittest.TestCase
             testCase.verifySubstring(transport.Calls(1).Url, "tickers=NASDAQ_MSFT%2CNASDAQ_AAPL");
             testCase.verifySubstring(transport.Calls(1).Url, "dateSort=date%3Adesc");
             testCase.verifyEqual(height(result), 2);
+        end
+
+        function testNormalizeTypesConvertsTableFields(testCase)
+            transport = MockTransport(FiscalAIClientTest.response(200, ...
+                '[{"ticker":"MSFT","date":"2026-03-15","periodYear":"2026","revenue":"94836000000"}]'));
+            client = fiscalai.FiscalAIClient( ...
+                ApiKey="test-key", Transport=@transport.send, NormalizeTypes=true);
+
+            result = client.earningsCalendar(Tickers="MSFT");
+
+            testCase.verifyClass(result.date, "datetime");
+            testCase.verifyEqual(result.periodYear(1), 2026);
+            testCase.verifyEqual(result.revenue(1), 94836000000);
+            testCase.verifyEqual(result.ticker(1), "MSFT");
+        end
+
+        function testNormalizeTypesConvertsStructFields(testCase)
+            transport = MockTransport(FiscalAIClientTest.response(200, ...
+                '{"ticker":"MSFT","earningsFilingDate":"2026-03-15","calendarYear":"2026"}'));
+            client = fiscalai.FiscalAIClient( ...
+                ApiKey="test-key", Transport=@transport.send, NormalizeTypes=true);
+
+            result = client.companyProfile(CompanyKey="NASDAQ_MSFT", ReturnType="struct");
+
+            testCase.verifyClass(result.earningsFilingDate, "datetime");
+            testCase.verifyEqual(result.calendarYear, 2026);
+            testCase.verifyEqual(result.ticker, "MSFT");
         end
 
         function testRateLimitMapsToError(testCase)

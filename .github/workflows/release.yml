@@ -1,0 +1,68 @@
+name: MATLAB Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Semantic version without leading v
+        required: true
+        default: 0.2.0
+      prerelease:
+        description: Mark the GitHub release as prerelease
+        required: false
+        default: false
+        type: boolean
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          release: latest
+
+      - name: Run unit tests
+        uses: matlab-actions/run-command@v2
+        with:
+          command: addpath('src'); results = runtests('tests/FiscalAIClientTest.m'); assertSuccess(results)
+
+      - name: Run Code Analyzer
+        uses: matlab-actions/run-command@v2
+        with:
+          command: issues = [checkcode('src/+fiscalai/FiscalAIClient.m','-struct'); checkcode('tests/FiscalAIClientTest.m','-struct'); checkcode('tools/packageToolbox.m','-struct'); checkcode('tools/runCoverage.m','-struct')]; assert(isempty(issues), evalc('disp(issues)'))
+
+      - name: Package toolbox
+        uses: matlab-actions/run-command@v2
+        with:
+          command: addpath('tools'); packageToolbox("output/matlab-fiscalai-${{ inputs.version }}.mltbx", Version="${{ inputs.version }}")
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > RELEASE_NOTES.md <<'EOF'
+          MATLAB Fiscal.ai client release.
+
+          This release was created by the automated MATLAB release workflow after unit tests, Code Analyzer, and toolbox packaging completed successfully.
+          EOF
+
+          prerelease_flag=""
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            prerelease_flag="--prerelease"
+          fi
+
+          gh release create "v${{ inputs.version }}" \
+            "output/matlab-fiscalai-${{ inputs.version }}.mltbx" \
+            --target "${{ github.sha }}" \
+            --title "v${{ inputs.version }}" \
+            --notes-file RELEASE_NOTES.md \
+            $prerelease_flag

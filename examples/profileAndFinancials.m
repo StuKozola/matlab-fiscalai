@@ -1,8 +1,9 @@
 %profileAndFinancials Fetch a profile and standardized financials.
 
-addpath(fullfile(fileparts(fileparts(mfilename("fullpath"))), "src"));
+projectRoot = fileparts(fileparts(mfilename("fullpath")));
+addpath(fullfile(projectRoot, "src"));
 
-client = fiscalai.FiscalAIClient();
+client = fiscalai.FiscalAIClient(EnvFile=fullfile(projectRoot, ".env"));
 
 profile = client.companyProfile(CompanyKey="NASDAQ_MSFT");
 financials = client.standardizedIncomeStatement( ...

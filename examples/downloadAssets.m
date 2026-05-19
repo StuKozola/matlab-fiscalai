@@ -1,8 +1,9 @@
 %downloadAssets Download Fiscal.ai binary assets.
 
-addpath(fullfile(fileparts(fileparts(mfilename("fullpath"))), "src"));
+projectRoot = fileparts(fileparts(mfilename("fullpath")));
+addpath(fullfile(projectRoot, "src"));
 
-client = fiscalai.FiscalAIClient();
+client = fiscalai.FiscalAIClient(EnvFile=fullfile(projectRoot, ".env"));
 
 client.companyLogo( ...
     CompanyKey="NASDAQ_MSFT", ...

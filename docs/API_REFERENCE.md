@@ -6,9 +6,13 @@ All calls use `fiscalai.FiscalAIClient`. Authentication is sent with the `X-Api-
 
 Use `ReturnType="auto"` by default. Flat lists and time-series payloads return MATLAB tables where practical. Nested payloads remain structs. Use `ReturnType="struct"` to preserve raw JSON-derived data or `ReturnType="table"` to require table conversion.
 
+Set `NormalizeTypes=true` on the client to conservatively convert date-like fields to `datetime`, text fields to `string`, and obvious numeric text fields to doubles. The default is `false` to preserve raw Fiscal.ai response fidelity.
+
 Financial and ratio period payloads flatten `metricValues` or `metricsValues` into wide tables with period metadata plus one column per metric. Binary endpoints return `[bytes, metadata]` and write to `OutputFile` when provided.
 
 ## Methods
+
+Generated method help is available in [METHOD_HELP.md](METHOD_HELP.md).
 
 | Method | Fiscal.ai endpoint | Notes |
 | --- | --- | --- |

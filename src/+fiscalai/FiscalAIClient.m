@@ -9,6 +9,7 @@ classdef FiscalAIClient
         MaxRetries (1,1) double {mustBeNonnegative, mustBeInteger} = 2
         RetryPause (1,1) double {mustBeNonnegative} = 0.5
         ReturnType (1,1) string {mustBeMember(ReturnType, ["auto", "struct", "table"])} = "auto"
+        NormalizeTypes (1,1) logical = false
     end
 
     properties (Access = private)
@@ -28,6 +29,7 @@ classdef FiscalAIClient
                 options.MaxRetries (1,1) double {mustBeNonnegative, mustBeInteger} = 2
                 options.RetryPause (1,1) double {mustBeNonnegative} = 0.5
                 options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["auto", "struct", "table"])} = "auto"
+                options.NormalizeTypes (1,1) logical = false
                 options.Transport = []
             end
 
@@ -38,6 +40,7 @@ classdef FiscalAIClient
             obj.MaxRetries = options.MaxRetries;
             obj.RetryPause = options.RetryPause;
             obj.ReturnType = options.ReturnType;
+            obj.NormalizeTypes = options.NormalizeTypes;
             obj.Transport = options.Transport;
             obj.ApiKey = obj.resolveApiKey(options.ApiKey, options.SecretName, options.EnvFile);
 
@@ -881,15 +884,24 @@ classdef FiscalAIClient
         function output = convertResponse(obj, body, returnType)
             if returnType == "struct"
                 output = body;
+                if obj.NormalizeTypes
+                    output = obj.normalizeTypes(output);
+                end
                 return
             end
 
             if returnType == "table"
                 output = obj.forceTable(body);
+                if obj.NormalizeTypes
+                    output = obj.normalizeTypes(output);
+                end
                 return
             end
 
             output = obj.autoConvert(body);
+            if obj.NormalizeTypes
+                output = obj.normalizeTypes(output);
+            end
         end
 
         function output = autoConvert(obj, body)
@@ -1034,6 +1046,111 @@ classdef FiscalAIClient
                 value = metricValue;
             else
                 value = NaN;
+            end
+        end
+
+        function output = normalizeTypes(obj, value)
+            if istable(value)
+                output = obj.normalizeTable(value);
+            elseif isstruct(value)
+                output = value;
+                fields = string(fieldnames(output));
+                for rowIdx = 1:numel(output)
+                    for fieldIdx = 1:numel(fields)
+                        name = fields(fieldIdx);
+                        output(rowIdx).(name) = obj.normalizeValue(name, output(rowIdx).(name));
+                    end
+                end
+            elseif iscell(value)
+                output = cell(size(value));
+                for idx = 1:numel(value)
+                    output{idx} = obj.normalizeTypes(value{idx});
+                end
+            else
+                output = value;
+            end
+        end
+
+        function output = normalizeTable(obj, input)
+            output = input;
+            names = string(output.Properties.VariableNames);
+            for idx = 1:numel(names)
+                name = names(idx);
+                output.(name) = obj.normalizeValue(name, output.(name));
+            end
+        end
+
+        function output = normalizeValue(obj, name, value)
+            if istable(value) || isstruct(value) || (iscell(value) && ~obj.isTextLike(value))
+                output = obj.normalizeTypes(value);
+            elseif obj.isDateField(name)
+                output = obj.toDatetime(value);
+            elseif obj.isNumericField(name)
+                output = obj.toDouble(value);
+            else
+                output = obj.toStringIfText(value);
+            end
+        end
+
+        function output = toDatetime(obj, value)
+            output = value;
+            if isdatetime(value)
+                return
+            end
+            if obj.isTextLike(value)
+                text = string(value);
+                try
+                    output = datetime(text, InputFormat="yyyy-MM-dd");
+                catch
+                    try
+                        output = datetime(text);
+                    catch
+                        output = value;
+                    end
+                end
+            end
+        end
+
+        function output = toDouble(obj, value)
+            output = value;
+            if isnumeric(value) || islogical(value)
+                return
+            end
+            if obj.isTextLike(value)
+                text = string(value);
+                converted = str2double(text);
+                if all(~isnan(converted) | ismissing(text))
+                    output = converted;
+                end
+            end
+        end
+
+        function output = toStringIfText(obj, value)
+            output = value;
+            if obj.isTextLike(value)
+                output = string(value);
+            end
+        end
+
+        function tf = isDateField(~, name)
+            lowerName = lower(string(name));
+            tf = lowerName == "date" || endsWith(lowerName, "date");
+        end
+
+        function tf = isNumericField(~, name)
+            lowerName = lower(string(name));
+            tokens = ["year", "quarter", "importance", "volume", "eps", ...
+                "revenue", "price", "shares", "ratio", "value", "count", "page"];
+            tf = any(contains(lowerName, tokens));
+        end
+
+        function tf = isTextLike(~, value)
+            if ischar(value) || isstring(value) || iscellstr(value)
+                tf = true;
+            elseif iscell(value)
+                tf = all(cellfun(@(item) ischar(item) || isstring(item), value(:)));
+            else
+                tf = false;
             end
         end
 

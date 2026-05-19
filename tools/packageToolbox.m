@@ -1,9 +1,10 @@
-function outputFile = packageToolbox(outputFile)
+function outputFile = packageToolbox(outputFile, options)
 %packageToolbox Package matlab-fiscalai as a MATLAB toolbox.
 
     arguments
         outputFile (1,1) string = fullfile( ...
             fileparts(fileparts(mfilename("fullpath"))), "output", "matlab-fiscalai.mltbx")
+        options.Version (1,1) string = "0.2.0"
     end
 
     projectRoot = fileparts(fileparts(mfilename("fullpath")));
@@ -15,9 +16,9 @@ function outputFile = packageToolbox(outputFile)
     opts = matlab.addons.toolbox.ToolboxOptions( ...
         projectRoot, "matlab-fiscalai");
     opts.ToolboxName = "matlab-fiscalai";
-    opts.ToolboxVersion = "0.1.0";
+    opts.ToolboxVersion = options.Version;
     opts.Summary = "MATLAB client for the Fiscal.ai REST API";
-    opts.Description = "A MATLAB client class, examples, and tests for Fiscal.ai company, financial, filing, market data, news, and earnings endpoints.";
+    opts.Description = "A MATLAB client class, examples, and docs for Fiscal.ai company, financial, filing, market data, news, and earnings endpoints.";
     opts.AuthorName = "StuKozola";
     opts.ToolboxFiles = [
         fullfile(projectRoot, "src")

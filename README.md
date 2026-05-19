@@ -16,6 +16,7 @@ Provide your API key explicitly, through MATLAB Vault, or through an environment
 client = fiscalai.FiscalAIClient(ApiKey="YOUR_API_KEY");
 client = fiscalai.FiscalAIClient(SecretName="FISCALAI_API_KEY");
 client = fiscalai.FiscalAIClient(); % reads FISCALAI_API_KEY from Vault, then env
+client = fiscalai.FiscalAIClient(NormalizeTypes=true);
 ```
 
 The client also reads a local `.env` file by default after Vault and environment lookup:
@@ -42,13 +43,15 @@ prices = client.stockPrices( ...
     CompanyKey="NASDAQ_MSFT", StartDate="2025-01-01", EndDate="2025-12-31");
 ```
 
-Most list and time-series responses are converted to `table` values when the response shape is flat. Nested responses are returned as structs unless `ReturnType="table"` is requested and conversion is possible.
+Most list and time-series responses are converted to `table` values when the response shape is flat. Nested responses are returned as structs unless `ReturnType="table"` is requested and conversion is possible. Set `NormalizeTypes=true` to conservatively convert date-like fields to `datetime`, text fields to `string`, and obvious numeric text fields to doubles.
+
+Runnable workflows are available in `examples/`, including financial statement analysis, ratio screening, filing downloads, earnings calendars, stock prices, and binary assets.
 
 ## Endpoint Coverage
 
 `fiscalai.FiscalAIClient` includes wrappers for companies, profiles, as-reported and standardized financials, standardized metrics, ratios, shares outstanding, adjusted metrics, segments and KPIs, stock splits, stock prices, filings, filing images/PDFs, logos, company news, earnings calendar, and earnings summary. Use `client.request("/path", Query=struct(...))` for new Fiscal.ai endpoints before a dedicated wrapper exists.
 
-See [docs/API_REFERENCE.md](docs/API_REFERENCE.md) for the method-to-endpoint map and return-shape notes.
+See [docs/API_REFERENCE.md](docs/API_REFERENCE.md) for the method-to-endpoint map and return-shape notes. See [docs/METHOD_HELP.md](docs/METHOD_HELP.md) for generated method help.
 
 Binary endpoints return bytes and metadata, and can write directly to a file:
 
@@ -80,6 +83,13 @@ addpath("tools")
 results = smokeFiscalAI()
 ```
 
+Generate a unit-test coverage report:
+
+```matlab
+addpath("tools")
+runCoverage()
+```
+
 Run Code Analyzer:
 
 ```matlab
@@ -94,3 +104,7 @@ packageToolbox()
 ```
 
 The package is written to `output/matlab-fiscalai.mltbx`, which is ignored by Git.
+
+## Release Automation
+
+Use the `MATLAB Release` GitHub Actions workflow to package and publish a release. Provide a semantic version without the leading `v`, for example `0.2.0`. The workflow runs unit tests, Code Analyzer, packages the toolbox, tags the commit, creates the GitHub release, and uploads the `.mltbx` asset.
