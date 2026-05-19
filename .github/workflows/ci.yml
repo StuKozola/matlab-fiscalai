@@ -36,7 +36,7 @@ jobs:
       - name: Run Code Analyzer
         uses: matlab-actions/run-command@v2
         with:
-          command: issues = [checkcode('src/+fiscalai/FiscalAIClient.m','-struct'); checkcode('src/+fiscalai/+workflows/companySnapshot.m','-struct'); checkcode('src/+fiscalai/+workflows/valuationScreen.m','-struct'); checkcode('tests/FiscalAIClientTest.m','-struct'); checkcode('tests/FiscalAIWorkflowTest.m','-struct'); checkcode('tests/FiscalAIIntegrationTest.m','-struct'); checkcode('tests/helpers/MockTransport.m','-struct'); checkcode('tools/generateMethodDocs.m','-struct'); checkcode('tools/packageToolbox.m','-struct'); checkcode('tools/runCoverage.m','-struct'); checkcode('tools/smokeFiscalAI.m','-struct')]; assert(isempty(issues), evalc('disp(issues)'))
+          command: issues = [checkcode('src/+fiscalai/FiscalAIClient.m','-struct'); checkcode('src/+fiscalai/+workflows/companyProfiles.m','-struct'); checkcode('src/+fiscalai/+workflows/companySnapshot.m','-struct'); checkcode('src/+fiscalai/+workflows/exportTables.m','-struct'); checkcode('src/+fiscalai/+workflows/pricePanel.m','-struct'); checkcode('src/+fiscalai/+workflows/valuationScreen.m','-struct'); checkcode('tests/FiscalAIClientTest.m','-struct'); checkcode('tests/FiscalAIWorkflowTest.m','-struct'); checkcode('tests/FiscalAIIntegrationTest.m','-struct'); checkcode('tests/helpers/MockTransport.m','-struct'); checkcode('tools/generateMethodDocs.m','-struct'); checkcode('tools/packageToolbox.m','-struct'); checkcode('tools/runCoverage.m','-struct'); checkcode('tools/smokeFiscalAI.m','-struct')]; assert(isempty(issues), evalc('disp(issues)'))
 
       - name: Generate coverage report
         uses: matlab-actions/run-command@v2

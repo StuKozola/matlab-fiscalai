@@ -17,6 +17,7 @@ Generated method help is available in [METHOD_HELP.md](METHOD_HELP.md).
 | Method | Fiscal.ai endpoint | Notes |
 | --- | --- | --- |
 | `companiesList` | `/v2/companies-list` | Supports `PageNumber`, `PageSize`. |
+| `companiesAll` | `/v2/companies-list` | Retrieves all catalog pages into one table; supports `MaxPages`. |
 | `companyProfile` | `/v2/company/profile` | Detailed company descriptors and available datasets. |
 | `companyLogo` | `/v2/company/logo` | Binary PNG; supports `Variant` and `OutputFile`. |
 | `companyNews` | `/v1/company/news` | Supports date range, event type, and importance filters. |
@@ -58,7 +59,10 @@ Generated method help is available in [METHOD_HELP.md](METHOD_HELP.md).
 | Function | Purpose |
 | --- | --- |
 | `fiscalai.workflows.companySnapshot` | Pulls profile, standardized statements, valuation ratios, prices, and earnings into one struct. |
+| `fiscalai.workflows.companyProfiles` | Pulls profiles for multiple companies into one table. |
+| `fiscalai.workflows.pricePanel` | Pulls daily prices for multiple companies into one combined table. |
 | `fiscalai.workflows.valuationScreen` | Builds a latest-ratio table for one or more companies. |
+| `fiscalai.workflows.exportTables` | Exports tables, timetables, and scalar structs to CSV/MAT files with a manifest. |
 
 ## Examples
 

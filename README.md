@@ -50,9 +50,17 @@ Runnable workflows are available in `examples/`, including financial statement a
 
 ## Endpoint Coverage
 
-`fiscalai.FiscalAIClient` includes wrappers for companies, profiles, as-reported and standardized financials, standardized metrics, ratios, shares outstanding, adjusted metrics, segments and KPIs, stock splits, stock prices, filings, filing images/PDFs, logos, company news, earnings calendar, and earnings summary. Use `fiscalai.FiscalAIClient.endpointCatalog()` to inspect wrapper coverage. Use `client.request("/path", Query=struct(...))` for new Fiscal.ai endpoints before a dedicated wrapper exists.
+`fiscalai.FiscalAIClient` includes wrappers for companies, profiles, as-reported and standardized financials, standardized metrics, ratios, shares outstanding, adjusted metrics, segments and KPIs, stock splits, stock prices, filings, filing images/PDFs, logos, company news, earnings calendar, and earnings summary. Use `client.companiesAll()` to retrieve all company catalog pages, and `fiscalai.FiscalAIClient.endpointCatalog()` to inspect wrapper coverage. Use `client.request("/path", Query=struct(...))` for new Fiscal.ai endpoints before a dedicated wrapper exists.
 
 See [docs/QUICKSTART.md](docs/QUICKSTART.md) to get started, [docs/API_REFERENCE.md](docs/API_REFERENCE.md) for the method-to-endpoint map and return-shape notes, [docs/API_EXAMPLES.md](docs/API_EXAMPLES.md) for endpoint-family examples, and [docs/METHOD_HELP.md](docs/METHOD_HELP.md) for generated method help.
+
+Bulk workflow helpers cover common multi-call tasks:
+
+```matlab
+profiles = fiscalai.workflows.companyProfiles(client, ["NASDAQ_MSFT" "NASDAQ_AAPL"]);
+prices = fiscalai.workflows.pricePanel(client, "NASDAQ_MSFT", StartDate="2025-01-01");
+manifest = fiscalai.workflows.exportTables(struct("Profiles", profiles, "Prices", prices), "output/export");
+```
 
 Binary endpoints return bytes and metadata, and can write directly to a file:
 
@@ -115,6 +123,6 @@ The package is written to `output/matlab-fiscalai.mltbx`, which is ignored by Gi
 
 ## Release Automation
 
-Use the `MATLAB Release` GitHub Actions workflow to package and publish a release. Provide a semantic version without the leading `v`, for example `0.3.0`. The workflow runs unit tests, Code Analyzer, packages the toolbox, tags the commit, creates the GitHub release, and uploads the `.mltbx` asset.
+Use the `MATLAB Release` GitHub Actions workflow to package and publish a release. Provide a semantic version without the leading `v`, for example `0.4.0`. The workflow runs unit tests, Code Analyzer, packages the toolbox, tags the commit, creates the GitHub release, and uploads the `.mltbx` asset.
 
 The `MATLAB Live Smoke` workflow also runs on a weekly schedule and can be started manually. It requires the `FISCALAI_API_KEY` repository secret.

@@ -10,6 +10,7 @@ client = fiscalai.FiscalAIClient(NormalizeTypes=true);
 
 ```matlab
 companies = client.companiesList(PageNumber=1, PageSize=1000);
+allCompanies = client.companiesAll(PageSize=1000, MaxPages=5);
 profile = client.companyProfile(CompanyKey="NASDAQ_MSFT");
 catalog = fiscalai.FiscalAIClient.endpointCatalog();
 ```
@@ -37,6 +38,19 @@ pe = client.companyRatios( ...
 screen = fiscalai.workflows.valuationScreen( ...
     client, "NASDAQ_MSFT", ...
     RatioIds=["ratio_price_to_earnings" "ratio_price_to_sales"]);
+```
+
+## Bulk Workflows And Exports
+
+```matlab
+profiles = fiscalai.workflows.companyProfiles( ...
+    client, ["NASDAQ_MSFT" "NASDAQ_AAPL"]);
+prices = fiscalai.workflows.pricePanel( ...
+    client, ["NASDAQ_MSFT" "NASDAQ_AAPL"], StartDate="2025-01-01");
+
+manifest = fiscalai.workflows.exportTables( ...
+    struct("Profiles", profiles, "Prices", prices), ...
+    "output/bulk-export", Prefix="bulk");
 ```
 
 ## Market Data

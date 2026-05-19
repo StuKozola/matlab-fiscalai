@@ -32,6 +32,13 @@ Default responses use `ReturnType="auto"`. Pass `ReturnType="struct"` for raw JS
 - Returns: Paged company catalog; auto mode returns `data` as a table.
 - Notes: Use paging for large catalog reads.
 
+## `companiesAll`
+
+- Syntax: `companies = client.companiesAll(PageSize=1000)`
+- Endpoint: `/v2/companies-list`
+- Returns: Combined company catalog table across all pages.
+- Notes: Use `MaxPages` to cap large catalog reads during development.
+
 ## `companyProfile`
 
 - Syntax: `profile = client.companyProfile(CompanyKey="NASDAQ_MSFT")`

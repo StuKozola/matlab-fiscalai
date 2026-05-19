@@ -40,6 +40,22 @@ classdef FiscalAIClientTest < matlab.unittest.TestCase
             testCase.verifyEqual(string(result.ticker), "MSFT");
         end
 
+        function testCompaniesAllCombinesPages(testCase)
+            transport = MockTransport([
+                FiscalAIClientTest.response(200, ...
+                '{"pagination":{"page":1,"hasNextPage":true},"data":[{"ticker":"MSFT","name":"Microsoft"}]}')
+                FiscalAIClientTest.response(200, ...
+                '{"pagination":{"page":2,"hasNextPage":false},"data":[{"ticker":"AAPL","name":"Apple"}]}')]);
+            client = fiscalai.FiscalAIClient(ApiKey="test-key", Transport=@transport.send);
+
+            result = client.companiesAll(PageSize=1);
+
+            testCase.verifyEqual(height(result), 2);
+            testCase.verifyEqual(string(result.ticker.'), ["MSFT" "AAPL"]);
+            testCase.verifySubstring(transport.Calls(1).Url, "pageNumber=1");
+            testCase.verifySubstring(transport.Calls(2).Url, "pageNumber=2");
+        end
+
         function testConstructorReadsApiKeyFromEnvFile(testCase)
             previousValue = getenv("FISCALAI_API_KEY");
             setenv("FISCALAI_API_KEY", "");

@@ -78,6 +78,46 @@ classdef FiscalAIClient
             data = obj.getJson("/v2/companies-list", params, obj.effectiveReturnType(options.ReturnType));
         end
 
+        function data = companiesAll(obj, options)
+            %companiesAll Get all company catalog pages as one table.
+            arguments
+                obj (1,1) fiscalai.FiscalAIClient
+                options.PageSize (1,1) double {mustBePositive, mustBeInteger} = 1000
+                options.MaxPages (1,1) double {mustBePositive} = Inf
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["auto", "struct", "table"])} = "table"
+            end
+
+            pageNumber = 1;
+            pages = {};
+            pagination = struct();
+
+            while pageNumber <= options.MaxPages
+                page = obj.companiesList( ...
+                    PageNumber=pageNumber, PageSize=options.PageSize, ...
+                    ReturnType="struct");
+                if isfield(page, "pagination")
+                    pagination = page.pagination;
+                end
+                if ~isfield(page, "data") || isempty(page.data)
+                    break
+                end
+
+                pageTable = obj.normalizeTable(obj.forceTable(page.data));
+                pages{end + 1} = pageTable; %#ok<AGROW>
+                if ~obj.hasNextPage(page, pages{end}, options.PageSize)
+                    break
+                end
+                pageNumber = pageNumber + 1;
+            end
+
+            combined = obj.vertcatTables(pages);
+            if options.ReturnType == "struct"
+                data = struct("pagination", pagination, "data", table2struct(combined));
+            else
+                data = combined;
+            end
+        end
+
         function data = companyProfile(obj, options)
             %companyProfile Get a company profile.
             arguments
@@ -751,6 +791,7 @@ classdef FiscalAIClient
                 "Company"
                 "Company"
                 "Company"
+                "Company"
                 "News"
                 "Financials As Reported"
                 "Financials Standardized"
@@ -775,6 +816,7 @@ classdef FiscalAIClient
                 "Generic"];
             method = [
                 "companiesList"
+                "companiesAll"
                 "companyProfile"
                 "companyLogo"
                 "companyNews"
@@ -801,6 +843,7 @@ classdef FiscalAIClient
                 "request"];
             endpoint = [
                 "/v2/companies-list"
+                "/v2/companies-list"
                 "/v2/company/profile"
                 "/v2/company/logo"
                 "/v1/company/news"
@@ -826,7 +869,7 @@ classdef FiscalAIClient
                 "/v1/company/stock-prices"
                 "Any GET endpoint"];
             status = [
-                repmat("Current", 19, 1)
+                repmat("Current", 20, 1)
                 repmat("Deprecated", 5, 1)
                 "Escape hatch"];
 
@@ -1085,6 +1128,27 @@ classdef FiscalAIClient
             end
         end
 
+        function tf = hasNextPage(~, page, rows, pageSize)
+            tf = false;
+            if isfield(page, "pagination") && isfield(page.pagination, "hasNextPage")
+                tf = logical(page.pagination.hasNextPage);
+            elseif istable(rows)
+                tf = height(rows) >= pageSize;
+            end
+        end
+
+        function output = vertcatTables(~, tables)
+            if isempty(tables)
+                output = table();
+                return
+            end
+
+            output = tables{1};
+            for idx = 2:numel(tables)
+                output = [output; tables{idx}]; %#ok<AGROW>
+            end
+        end
+
         function output = timetableConvert(obj, value)
             if istimetable(value)
                 output = value;
@@ -1304,7 +1368,11 @@ classdef FiscalAIClient
                 return
             end
             if obj.isTextLike(value)
-                text = string(value);
+                try
+                    text = string(value);
+                catch
+                    return
+                end
                 try
                     output = datetime(text, InputFormat="yyyy-MM-dd");
                 catch
@@ -1323,7 +1391,11 @@ classdef FiscalAIClient
                 return
             end
             if obj.isTextLike(value)
-                text = string(value);
+                try
+                    text = string(value);
+                catch
+                    return
+                end
                 converted = str2double(text);
                 if all(~isnan(converted) | ismissing(text))
                     output = converted;
@@ -1334,7 +1406,11 @@ classdef FiscalAIClient
         function output = toStringIfText(obj, value)
             output = value;
             if obj.isTextLike(value)
-                output = string(value);
+                try
+                    output = string(value);
+                catch
+                    output = value;
+                end
             end
         end
 

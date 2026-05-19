@@ -54,6 +54,57 @@ classdef FiscalAIWorkflowTest < matlab.unittest.TestCase
             testCase.verifyEqual(height(snapshot.ValuationRatios), 1);
             testCase.verifyClass(snapshot.EarningsSummary, "table");
         end
+
+        function testCompanyProfilesCombinesProfileRows(testCase)
+            transport = MockTransport([
+                FiscalAIWorkflowTest.response(200, ...
+                '{"ticker":"MSFT","name":"Microsoft Corporation","sector":"Technology"}')
+                FiscalAIWorkflowTest.response(200, ...
+                '{"ticker":"AAPL","name":"Apple Inc.","sector":"Technology"}')]);
+            client = fiscalai.FiscalAIClient(ApiKey="test-key", Transport=@transport.send);
+
+            profiles = fiscalai.workflows.companyProfiles( ...
+                client, ["NASDAQ_MSFT" "NASDAQ_AAPL"]);
+
+            testCase.verifyEqual(height(profiles), 2);
+            testCase.verifyEqual(string(profiles.Lookup.'), ["NASDAQ_MSFT" "NASDAQ_AAPL"]);
+            testCase.verifyEqual(string(profiles.ticker.'), ["MSFT" "AAPL"]);
+        end
+
+        function testPricePanelCombinesCompanyPrices(testCase)
+            transport = MockTransport([
+                FiscalAIWorkflowTest.response(200, ...
+                '[{"date":"2025-12-31","close_price":483.62}]')
+                FiscalAIWorkflowTest.response(200, ...
+                '[{"date":"2025-12-31","close_price":250.42}]')]);
+            client = fiscalai.FiscalAIClient(ApiKey="test-key", Transport=@transport.send);
+
+            panel = fiscalai.workflows.pricePanel( ...
+                client, ["NASDAQ_MSFT" "NASDAQ_AAPL"], Latest=true);
+
+            testCase.verifyEqual(height(panel), 2);
+            testCase.verifyEqual(string(panel.Company.'), ["NASDAQ_MSFT" "NASDAQ_AAPL"]);
+            testCase.verifyEqual(panel.close_price.', [483.62 250.42], AbsTol=1e-12);
+            testCase.verifySubstring(transport.Calls(1).Url, "latest=true");
+        end
+
+        function testExportTablesWritesManifestAndFiles(testCase)
+            outputFolder = string(tempname);
+            mkdir(outputFolder);
+            testCase.addTeardown(@() rmdir(outputFolder, "s"));
+            snapshot = struct( ...
+                "Profile", struct("ticker", "MSFT", "name", "Microsoft"), ...
+                "Prices", timetable(483.62, RowTimes=datetime("2025-12-31"), ...
+                VariableNames="close_price"));
+
+            manifest = fiscalai.workflows.exportTables( ...
+                snapshot, outputFolder, Prefix="snapshot");
+
+            testCase.verifyEqual(height(manifest), 2);
+            testCase.verifyTrue(all(isfile(manifest.File)));
+            testCase.verifyTrue(any(endsWith(manifest.File, "snapshot_Profile.csv")));
+            testCase.verifyTrue(any(endsWith(manifest.File, "snapshot_Prices.csv")));
+        end
     end
 
     methods (Static, Access = private)

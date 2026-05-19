@@ -6,7 +6,7 @@ on:
       version:
         description: Semantic version without leading v
         required: true
-        default: 0.3.0
+        default: 0.4.0
       prerelease:
         description: Mark the GitHub release as prerelease
         required: false
@@ -38,7 +38,7 @@ jobs:
       - name: Run Code Analyzer
         uses: matlab-actions/run-command@v2
         with:
-          command: issues = [checkcode('src/+fiscalai/FiscalAIClient.m','-struct'); checkcode('src/+fiscalai/+workflows/companySnapshot.m','-struct'); checkcode('src/+fiscalai/+workflows/valuationScreen.m','-struct'); checkcode('tests/FiscalAIClientTest.m','-struct'); checkcode('tests/FiscalAIWorkflowTest.m','-struct'); checkcode('tools/packageToolbox.m','-struct'); checkcode('tools/runCoverage.m','-struct')]; assert(isempty(issues), evalc('disp(issues)'))
+          command: issues = [checkcode('src/+fiscalai/FiscalAIClient.m','-struct'); checkcode('src/+fiscalai/+workflows/companyProfiles.m','-struct'); checkcode('src/+fiscalai/+workflows/companySnapshot.m','-struct'); checkcode('src/+fiscalai/+workflows/exportTables.m','-struct'); checkcode('src/+fiscalai/+workflows/pricePanel.m','-struct'); checkcode('src/+fiscalai/+workflows/valuationScreen.m','-struct'); checkcode('tests/FiscalAIClientTest.m','-struct'); checkcode('tests/FiscalAIWorkflowTest.m','-struct'); checkcode('tools/packageToolbox.m','-struct'); checkcode('tools/runCoverage.m','-struct')]; assert(isempty(issues), evalc('disp(issues)'))
 
       - name: Package toolbox
         uses: matlab-actions/run-command@v2

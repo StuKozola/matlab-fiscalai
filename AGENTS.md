@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This workspace contains the `matlab-fiscalai` MATLAB client. Source lives in `src/+fiscalai/`, tests in `tests/`, helpers in `tests/helpers/`, examples in `examples/`, docs in `docs/`, and utilities in `tools/`. Workflows live in `.github/workflows/`. Keep generated outputs, reports, caches, and large datasets outside the repo or under ignored `output/`.
+This workspace contains the `matlab-fiscalai` MATLAB client. Source lives in `src/+fiscalai/`, tests in `tests/`, helpers in `tests/helpers/`, examples in `examples/`, docs in `docs/`, utilities in `tools/`, and workflows in `.github/workflows/`. Keep generated outputs under ignored `output/` or `coverage-report/`.
 
 Use the `fiscalai` package namespace, for example `src/+fiscalai/FiscalAIClient.m`. Keep public entry points shallow and place helpers next to owning code.
 
@@ -10,7 +10,7 @@ Use the `fiscalai` package namespace, for example `src/+fiscalai/FiscalAIClient.
 
 - `matlab -batch "addpath('src'); results = runtests('tests'); assertSuccess(results)"` runs the MATLAB unit tests.
 - `matlab -batch "addpath('src'); results = runtests('tests/FiscalAIClientTest.m'); assertSuccess(results)"` runs CI-safe tests.
-- `matlab -batch "addpath('src'); results = runtests('tests/FiscalAIWorkflowTest.m'); assertSuccess(results)"` runs workflow helper tests.
+- `matlab -batch "addpath('src'); results = runtests('tests/FiscalAIWorkflowTest.m'); assertSuccess(results)"` runs workflow tests.
 - `matlab -batch "addpath('src'); results = runtests('tests/FiscalAIIntegrationTest.m'); assertSuccess(results)"` runs live tests when an API key is available.
 - `matlab -batch "addpath('tools'); packageToolbox"` writes `output/matlab-fiscalai.mltbx`.
 - `matlab -batch "addpath('tools'); runCoverage"` writes `coverage-report/`.
@@ -27,7 +27,7 @@ Keep one primary function or class per `.m` file, with the filename matching the
 
 ## Testing Guidelines
 
-Use `matlab.unittest` for automated tests. Place tests under `tests/` and use mocked transports for API tests so unit tests do not need a Fiscal.ai key. Cover request construction, auth, response conversion, retries, error IDs, and binary downloads.
+Use `matlab.unittest` for automated tests. Place tests under `tests/` and use mocked transports so unit tests do not need a Fiscal.ai key. Cover request construction, auth, response conversion, retries, error IDs, and binary downloads.
 
 Tests should not depend on user-specific files or network access. Store small fixtures under `tests/fixtures/`.
 
