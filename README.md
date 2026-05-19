@@ -18,6 +18,12 @@ client = fiscalai.FiscalAIClient(SecretName="FISCALAI_API_KEY");
 client = fiscalai.FiscalAIClient(); % reads FISCALAI_API_KEY from Vault, then env
 ```
 
+The client also reads a local `.env` file by default after Vault and environment lookup:
+
+```text
+FISCALAI_API_KEY=YOUR_API_KEY
+```
+
 To store the key in MATLAB Vault:
 
 ```matlab
@@ -54,8 +60,22 @@ client.filingPdf("0000320193-24-000123", Ticker="AAPL", Exchange="NASDAQ", Outpu
 Run unit tests without a live API key:
 
 ```matlab
-results = runtests("tests");
+results = runtests("tests/FiscalAIClientTest.m");
 assertSuccess(results)
+```
+
+Run optional live integration tests when an API key is available:
+
+```matlab
+results = runtests("tests/FiscalAIIntegrationTest.m");
+assertSuccess(results)
+```
+
+Run a live endpoint smoke pass:
+
+```matlab
+addpath("tools")
+results = smokeFiscalAI()
 ```
 
 Run Code Analyzer:
@@ -64,4 +84,11 @@ Run Code Analyzer:
 checkcode("src/+fiscalai/FiscalAIClient.m", "-cyc")
 ```
 
-Optional live integration tests can be added later with the `Integration` tag and should only run when a real API key is available.
+Package a local MATLAB toolbox:
+
+```matlab
+addpath("tools")
+packageToolbox()
+```
+
+The package is written to `output/matlab-fiscalai.mltbx`, which is ignored by Git.

@@ -40,6 +40,22 @@ classdef FiscalAIClientTest < matlab.unittest.TestCase
             testCase.verifyEqual(string(result.ticker), "MSFT");
         end
 
+        function testConstructorReadsApiKeyFromEnvFile(testCase)
+            previousValue = getenv("FISCALAI_API_KEY");
+            setenv("FISCALAI_API_KEY", "");
+            testCase.addTeardown(@() setenv("FISCALAI_API_KEY", previousValue));
+            envFile = tempname + ".env";
+            writelines(["# local test file"; "FISCALAI_TEST_API_KEY = ""env-file-key"""], envFile);
+            testCase.addTeardown(@() delete(envFile));
+            transport = MockTransport(FiscalAIClientTest.response(200, '{"ticker":"MSFT"}'));
+            client = fiscalai.FiscalAIClient( ...
+                SecretName="FISCALAI_TEST_API_KEY", EnvFile=envFile, Transport=@transport.send);
+
+            client.companyProfile(CompanyKey="NASDAQ_MSFT");
+
+            testCase.verifyEqual(transport.Calls(1).Headers.X_Api_Key, "env-file-key");
+        end
+
         function testFinancialStatementEndpointAndCsvPeriod(testCase)
             transport = MockTransport(FiscalAIClientTest.response(200, ...
                 '{"data":[{"periodType":"Annual","revenue":10},{"periodType":"Quarterly","revenue":3}]}'));

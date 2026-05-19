@@ -4,6 +4,7 @@ classdef FiscalAIClient
     properties (SetAccess = private)
         BaseUrl (1,1) string = "https://api.fiscal.ai"
         SecretName (1,1) string = "FISCALAI_API_KEY"
+        EnvFile (1,1) string = ".env"
         Timeout (1,1) double {mustBePositive} = 30
         MaxRetries (1,1) double {mustBeNonnegative, mustBeInteger} = 2
         RetryPause (1,1) double {mustBeNonnegative} = 0.5
@@ -21,6 +22,7 @@ classdef FiscalAIClient
             arguments
                 options.ApiKey (1,1) string = ""
                 options.SecretName (1,1) string = "FISCALAI_API_KEY"
+                options.EnvFile (1,1) string = ".env"
                 options.BaseUrl (1,1) string = "https://api.fiscal.ai"
                 options.Timeout (1,1) double {mustBePositive} = 30
                 options.MaxRetries (1,1) double {mustBeNonnegative, mustBeInteger} = 2
@@ -31,17 +33,18 @@ classdef FiscalAIClient
 
             obj.BaseUrl = strip(options.BaseUrl, "right", "/");
             obj.SecretName = options.SecretName;
+            obj.EnvFile = options.EnvFile;
             obj.Timeout = options.Timeout;
             obj.MaxRetries = options.MaxRetries;
             obj.RetryPause = options.RetryPause;
             obj.ReturnType = options.ReturnType;
             obj.Transport = options.Transport;
-            obj.ApiKey = obj.resolveApiKey(options.ApiKey, options.SecretName);
+            obj.ApiKey = obj.resolveApiKey(options.ApiKey, options.SecretName, options.EnvFile);
 
             if strlength(obj.ApiKey) == 0
                 error("fiscalai:MissingApiKey", ...
-                    "Provide ApiKey, set MATLAB Vault secret %s, or set environment variable FISCALAI_API_KEY.", ...
-                    options.SecretName);
+                    "Provide ApiKey, set MATLAB Vault secret %s, set environment variable FISCALAI_API_KEY, or add it to %s.", ...
+                    options.SecretName, options.EnvFile);
             end
         end
 
@@ -773,7 +776,7 @@ classdef FiscalAIClient
             request = RequestMessage(RequestMethod(method), requestHeaders);
             options = matlab.net.http.HTTPOptions( ...
                 ConnectTimeout=obj.Timeout, ...
-                DecodeResponse=false, ...
+                DecodeResponse=true, ...
                 ConvertResponse=false);
             raw = request.send(URI(url), options);
 
@@ -1019,7 +1022,7 @@ classdef FiscalAIClient
     end
 
     methods (Static, Access = private)
-        function apiKey = resolveApiKey(apiKey, secretName)
+        function apiKey = resolveApiKey(apiKey, secretName, envFile)
             if strlength(apiKey) > 0
                 return
             end
@@ -1039,6 +1042,32 @@ classdef FiscalAIClient
             envValue = getenv("FISCALAI_API_KEY");
             if ~isempty(envValue)
                 apiKey = string(envValue);
+                return
+            end
+
+            if strlength(envFile) > 0
+                apiKey = fiscalai.FiscalAIClient.readApiKeyFromEnvFile(secretName, envFile);
+            end
+        end
+
+        function apiKey = readApiKeyFromEnvFile(secretName, envFile)
+            apiKey = "";
+            if ~isfile(envFile)
+                return
+            end
+
+            lines = string(splitlines(fileread(envFile)));
+            pattern = "^" + regexptranslate("escape", secretName) + "\s*=\s*(.*)$";
+            for idx = 1:numel(lines)
+                line = strtrim(lines(idx));
+                if startsWith(line, "#") || strlength(line) == 0
+                    continue
+                end
+                tokens = regexp(char(line), char(pattern), "tokens", "once");
+                if ~isempty(tokens)
+                    apiKey = string(regexprep(strtrim(tokens{1}), "^([""'])(.*)\1$", "$2"));
+                    return
+                end
             end
         end
 

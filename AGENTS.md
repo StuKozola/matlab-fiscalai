@@ -2,13 +2,15 @@
 
 ## Project Structure & Module Organization
 
-This workspace contains the `matlab-fiscalai` MATLAB client. Source code lives in `src/+fiscalai/`, tests live in `tests/`, test-only helpers live in `tests/helpers/`, and runnable examples live in `examples/`. Keep generated outputs, reports, caches, and large local datasets outside the repository or under an ignored `output/` directory.
+This workspace contains the `matlab-fiscalai` MATLAB client. Source code lives in `src/+fiscalai/`, tests in `tests/`, helpers in `tests/helpers/`, examples in `examples/`, and utility scripts in `tools/`. GitHub Actions workflows live in `.github/workflows/`. Keep generated outputs, reports, caches, and large local datasets outside the repository or under ignored `output/`.
 
 Use the `fiscalai` package namespace for public code, for example `src/+fiscalai/FiscalAIClient.m`. Keep public entry points shallow and place helpers next to the code that owns them.
 
 ## Build, Test, and Development Commands
 
 - `matlab -batch "addpath('src'); results = runtests('tests'); assertSuccess(results)"` runs the MATLAB unit tests.
+- `matlab -batch "addpath('src'); results = runtests('tests/FiscalAIClientTest.m'); assertSuccess(results)"` runs CI-safe tests.
+- `matlab -batch "addpath('tools'); packageToolbox"` writes `output/matlab-fiscalai.mltbx`.
 - `matlab -batch "checkcode('src/+fiscalai/FiscalAIClient.m','-cyc')"` runs MATLAB Code Analyzer checks, including cyclomatic complexity.
 - `matlab -batch "run('examples/exampleName.m')"` runs a specific example script locally.
 
