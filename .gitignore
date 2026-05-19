@@ -1,0 +1,15 @@
+# Local secrets and environment files
+.env
+*.env
+
+# MATLAB editor and generated files
+*.asv
+*.m~
+*.autosave
+*.mltbx
+*.log
+
+# Local outputs
+output/
+coverage-report/
+*.tmp
