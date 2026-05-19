@@ -4,9 +4,9 @@ All calls use `fiscalai.FiscalAIClient`. Authentication is sent with the `X-Api-
 
 ## Response Shapes
 
-Use `ReturnType="auto"` by default. Flat lists and time-series payloads return MATLAB tables where practical. Nested payloads remain structs. Use `ReturnType="struct"` to preserve raw JSON-derived data or `ReturnType="table"` to require table conversion.
+Use `ReturnType="auto"` by default. Flat lists and time-series payloads return MATLAB tables where practical. Nested payloads remain structs. Use `ReturnType="struct"` to preserve raw JSON-derived data, `ReturnType="table"` to require table conversion, or `ReturnType="timetable"` for date-indexed time series and period rows.
 
-Set `NormalizeTypes=true` on the client to conservatively convert date-like fields to `datetime`, text fields to `string`, and obvious numeric text fields to doubles. The default is `false` to preserve raw Fiscal.ai response fidelity.
+Set `NormalizeTypes=true` on the client to conservatively convert date-like fields to `datetime`, text fields to `string`, and obvious numeric text fields to doubles. The default is `false` to preserve raw Fiscal.ai response fidelity. `ReturnType="timetable"` applies the same conservative conversions before selecting a date-like row-time variable.
 
 Financial and ratio period payloads flatten `metricValues` or `metricsValues` into wide tables with period metadata plus one column per metric. Binary endpoints return `[bytes, metadata]` and write to `OutputFile` when provided.
 
@@ -23,9 +23,11 @@ Generated method help is available in [METHOD_HELP.md](METHOD_HELP.md).
 | `asReportedIncomeStatement` | `/v1/company/financials/income-statement/as-reported` | As-reported income statement. |
 | `asReportedBalanceSheet` | `/v1/company/financials/balance-sheet/as-reported` | As-reported balance sheet. |
 | `asReportedCashFlowStatement` | `/v1/company/financials/cash-flow-statement/as-reported` | As-reported cash flow statement. |
+| `asReportedFinancials` | `/v1/company/financials/{statementType}/as-reported` | Generic wrapper for supported statement types. |
 | `standardizedIncomeStatement` | `/v1/company/financials/income-statement/standardized` | Wide table in auto mode. |
 | `standardizedBalanceSheet` | `/v1/company/financials/balance-sheet/standardized` | Wide table in auto mode. |
 | `standardizedCashFlowStatement` | `/v1/company/financials/cash-flow-statement/standardized` | Wide table in auto mode. |
+| `standardizedFinancials` | `/v1/company/financials/{statementType}/standardized` | Generic wrapper; supports `ReturnType="timetable"`. |
 | `standardizedMetricsList` | `/v1/standardized-metrics-list/{templateType}/{statementType}` | Requires template and statement path values. |
 | `allStandardizedMetricsList` | `/v1/standardized-metrics-list` | Full standardized metric catalog. |
 | `ratiosList` | `/v1/ratios-list` | Ratio catalog. |
@@ -48,13 +50,22 @@ Generated method help is available in [METHOD_HELP.md](METHOD_HELP.md).
 | `earningsSummary` | `/v1/company/earnings-summary` | Latest company earnings summary. |
 | `legacyCompaniesList` | `/v1/companies-list` | Deprecated v1 endpoint. |
 | `legacyCompanyProfile` | `/v1/company/profile` | Deprecated v1 endpoint. |
+| `endpointCatalog` | N/A | Static table of endpoint families and wrapper status. |
 | `request` | Any GET path | Escape hatch for new Fiscal.ai endpoints. |
+
+## Workflow Helpers
+
+| Function | Purpose |
+| --- | --- |
+| `fiscalai.workflows.companySnapshot` | Pulls profile, standardized statements, valuation ratios, prices, and earnings into one struct. |
+| `fiscalai.workflows.valuationScreen` | Builds a latest-ratio table for one or more companies. |
 
 ## Examples
 
 ```matlab
 client = fiscalai.FiscalAIClient();
 income = client.standardizedIncomeStatement(CompanyKey="NASDAQ_MSFT", PeriodType="annual");
+incomeTT = client.standardizedFinancials("income-statement", CompanyKey="NASDAQ_MSFT", ReturnType="timetable");
 prices = client.stockPrices(CompanyKey="NASDAQ_MSFT", StartDate="2025-01-01", EndDate="2025-12-31");
 [bytes, metadata] = client.companyLogo(CompanyKey="NASDAQ_MSFT", Variant="logo");
 ```

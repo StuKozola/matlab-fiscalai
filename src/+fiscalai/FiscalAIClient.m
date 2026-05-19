@@ -8,7 +8,7 @@ classdef FiscalAIClient
         Timeout (1,1) double {mustBePositive} = 30
         MaxRetries (1,1) double {mustBeNonnegative, mustBeInteger} = 2
         RetryPause (1,1) double {mustBeNonnegative} = 0.5
-        ReturnType (1,1) string {mustBeMember(ReturnType, ["auto", "struct", "table"])} = "auto"
+        ReturnType (1,1) string {mustBeMember(ReturnType, ["auto", "struct", "table", "timetable"])} = "auto"
         NormalizeTypes (1,1) logical = false
     end
 
@@ -28,7 +28,7 @@ classdef FiscalAIClient
                 options.Timeout (1,1) double {mustBePositive} = 30
                 options.MaxRetries (1,1) double {mustBeNonnegative, mustBeInteger} = 2
                 options.RetryPause (1,1) double {mustBeNonnegative} = 0.5
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["auto", "struct", "table"])} = "auto"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["auto", "struct", "table", "timetable"])} = "auto"
                 options.NormalizeTypes (1,1) logical = false
                 options.Transport = []
             end
@@ -57,7 +57,7 @@ classdef FiscalAIClient
                 obj (1,1) fiscalai.FiscalAIClient
                 path (1,1) string
                 options.Query (1,1) struct = struct()
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson(path, options.Query, obj.effectiveReturnType(options.ReturnType));
@@ -69,7 +69,7 @@ classdef FiscalAIClient
                 obj (1,1) fiscalai.FiscalAIClient
                 options.PageNumber = []
                 options.PageSize = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             params = obj.queryStruct( ...
@@ -90,7 +90,7 @@ classdef FiscalAIClient
                 options.Isin = []
                 options.Figi = []
                 options.Cik = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v2/company/profile", obj.identifierParams(options), ...
@@ -101,7 +101,7 @@ classdef FiscalAIClient
             %legacyCompaniesList Get companies from the deprecated v1 endpoint.
             arguments
                 obj (1,1) fiscalai.FiscalAIClient
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/companies-list", struct(), obj.effectiveReturnType(options.ReturnType));
@@ -119,7 +119,7 @@ classdef FiscalAIClient
                 options.Isin = []
                 options.Figi = []
                 options.Cik = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/company/profile", obj.identifierParams(options), ...
@@ -140,7 +140,7 @@ classdef FiscalAIClient
                 options.Cik = []
                 options.PeriodType = []
                 options.Currency = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.asReported("income-statement", options);
@@ -160,7 +160,7 @@ classdef FiscalAIClient
                 options.Cik = []
                 options.PeriodType = []
                 options.Currency = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.asReported("balance-sheet", options);
@@ -180,10 +180,32 @@ classdef FiscalAIClient
                 options.Cik = []
                 options.PeriodType = []
                 options.Currency = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.asReported("cash-flow-statement", options);
+        end
+
+        function data = asReportedFinancials(obj, statementType, options)
+            %asReportedFinancials Get as-reported financial data by statement type.
+            arguments
+                obj (1,1) fiscalai.FiscalAIClient
+                statementType (1,1) string {mustBeMember(statementType, ...
+                    ["income-statement", "balance-sheet", "cash-flow-statement"])}
+                options.Ticker = []
+                options.MicCode = []
+                options.Exchange = []
+                options.CompanyKey = []
+                options.Cusip = []
+                options.Isin = []
+                options.Figi = []
+                options.Cik = []
+                options.PeriodType = []
+                options.Currency = []
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
+            end
+
+            data = obj.asReported(statementType, options);
         end
 
         function data = standardizedIncomeStatement(obj, options)
@@ -201,7 +223,7 @@ classdef FiscalAIClient
                 options.PeriodType = []
                 options.Currency = []
                 options.IncludeReportingTemplates = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.standardized("income-statement", options);
@@ -222,7 +244,7 @@ classdef FiscalAIClient
                 options.PeriodType = []
                 options.Currency = []
                 options.IncludeReportingTemplates = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.standardized("balance-sheet", options);
@@ -243,10 +265,33 @@ classdef FiscalAIClient
                 options.PeriodType = []
                 options.Currency = []
                 options.IncludeReportingTemplates = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.standardized("cash-flow-statement", options);
+        end
+
+        function data = standardizedFinancials(obj, statementType, options)
+            %standardizedFinancials Get standardized financial data by statement type.
+            arguments
+                obj (1,1) fiscalai.FiscalAIClient
+                statementType (1,1) string {mustBeMember(statementType, ...
+                    ["income-statement", "balance-sheet", "cash-flow-statement"])}
+                options.Ticker = []
+                options.MicCode = []
+                options.Exchange = []
+                options.CompanyKey = []
+                options.Cusip = []
+                options.Isin = []
+                options.Figi = []
+                options.Cik = []
+                options.PeriodType = []
+                options.Currency = []
+                options.IncludeReportingTemplates = []
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
+            end
+
+            data = obj.standardized(statementType, options);
         end
 
         function data = standardizedMetricsList(obj, templateType, statementType, options)
@@ -255,7 +300,7 @@ classdef FiscalAIClient
                 obj (1,1) fiscalai.FiscalAIClient
                 templateType (1,1) string
                 statementType (1,1) string
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             path = "/v1/standardized-metrics-list/" + ...
@@ -267,7 +312,7 @@ classdef FiscalAIClient
             %allStandardizedMetricsList Get the complete standardized metrics list.
             arguments
                 obj (1,1) fiscalai.FiscalAIClient
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/standardized-metrics-list", struct(), ...
@@ -278,7 +323,7 @@ classdef FiscalAIClient
             %ratiosList Get the list of supported ratios.
             arguments
                 obj (1,1) fiscalai.FiscalAIClient
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/ratios-list", struct(), obj.effectiveReturnType(options.ReturnType));
@@ -299,7 +344,7 @@ classdef FiscalAIClient
                 options.PeriodType = []
                 options.Currency = []
                 options.RatioId = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             params = obj.withPeriodCurrency(obj.identifierParams(options), options);
@@ -321,7 +366,7 @@ classdef FiscalAIClient
                 options.Figi = []
                 options.Cik = []
                 options.Currency = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             params = obj.addQueryParam(obj.identifierParams(options), "currency", options.Currency);
@@ -341,7 +386,7 @@ classdef FiscalAIClient
                 options.Isin = []
                 options.Figi = []
                 options.Cik = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/company/shares-outstanding", obj.identifierParams(options), ...
@@ -362,7 +407,7 @@ classdef FiscalAIClient
                 options.Cik = []
                 options.PeriodType = []
                 options.Currency = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/company/adjusted-metrics", ...
@@ -384,7 +429,7 @@ classdef FiscalAIClient
                 options.Cik = []
                 options.PeriodType = []
                 options.Currency = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/company/adjusted-numbers", ...
@@ -406,7 +451,7 @@ classdef FiscalAIClient
                 options.Cik = []
                 options.PeriodType = []
                 options.Currency = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v2/company/segments-and-kpis", ...
@@ -428,7 +473,7 @@ classdef FiscalAIClient
                 options.Cik = []
                 options.PeriodType = []
                 options.Currency = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/company/segments-and-kpis", ...
@@ -448,7 +493,7 @@ classdef FiscalAIClient
                 options.Isin = []
                 options.Figi = []
                 options.Cik = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/company/stock-splits", obj.identifierParams(options), ...
@@ -470,7 +515,7 @@ classdef FiscalAIClient
                 options.StartDate = []
                 options.EndDate = []
                 options.Latest = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v2/company/stock-prices", obj.withDateRange(obj.identifierParams(options), options), ...
@@ -492,7 +537,7 @@ classdef FiscalAIClient
                 options.StartDate = []
                 options.EndDate = []
                 options.Latest = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/company/stock-prices", obj.withDateRange(obj.identifierParams(options), options), ...
@@ -513,7 +558,7 @@ classdef FiscalAIClient
                 options.Cik = []
                 options.StartDate = []
                 options.EndDate = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/company/stock-prices/intraday", ...
@@ -533,7 +578,7 @@ classdef FiscalAIClient
                 options.Isin = []
                 options.Figi = []
                 options.Cik = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v2/company/filings", obj.identifierParams(options), ...
@@ -552,7 +597,7 @@ classdef FiscalAIClient
                 options.Isin = []
                 options.Figi = []
                 options.Cik = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/company/filings", obj.identifierParams(options), ...
@@ -637,7 +682,7 @@ classdef FiscalAIClient
                 options.EndDate = []
                 options.EventType = []
                 options.Importance = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             params = obj.withDateRange(obj.identifierParams(options), options);
@@ -661,7 +706,7 @@ classdef FiscalAIClient
                 options.Cusip = []
                 options.DateSort = []
                 options.Updated = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             params = obj.queryStruct( ...
@@ -691,11 +736,102 @@ classdef FiscalAIClient
                 options.Isin = []
                 options.Figi = []
                 options.Cik = []
-                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table"])} = "default"
+                options.ReturnType (1,1) string {mustBeMember(options.ReturnType, ["default", "auto", "struct", "table", "timetable"])} = "default"
             end
 
             data = obj.getJson("/v1/company/earnings-summary", obj.identifierParams(options), ...
                 obj.effectiveReturnType(options.ReturnType));
+        end
+    end
+
+    methods (Static)
+        function endpoints = endpointCatalog()
+            %endpointCatalog Return supported Fiscal.ai endpoints and MATLAB wrappers.
+            category = [
+                "Company"
+                "Company"
+                "Company"
+                "News"
+                "Financials As Reported"
+                "Financials Standardized"
+                "Financials Standardized"
+                "Company Ratios"
+                "Company Ratios"
+                "Company Ratios"
+                "Company Ratios"
+                "Segments and KPIs"
+                "Adjusted Metrics"
+                "Corporate Actions"
+                "Stock Prices"
+                "Company Filings"
+                "Financials Sourcing"
+                "Earnings"
+                "Earnings"
+                "Deprecated"
+                "Deprecated"
+                "Deprecated"
+                "Deprecated"
+                "Deprecated"
+                "Generic"];
+            method = [
+                "companiesList"
+                "companyProfile"
+                "companyLogo"
+                "companyNews"
+                "asReportedFinancials"
+                "standardizedFinancials"
+                "standardizedMetricsList/allStandardizedMetricsList"
+                "companyRatios"
+                "dailyRatios"
+                "ratiosList"
+                "sharesOutstanding"
+                "segmentsAndKpis"
+                "adjustedMetrics/adjustedNumbers"
+                "stockSplits"
+                "stockPrices/intradayStockPrices"
+                "companyFilings"
+                "filingImage/filingPdf"
+                "earningsCalendar"
+                "earningsSummary"
+                "legacyCompaniesList"
+                "legacyCompanyProfile"
+                "secFilings"
+                "legacySegmentsAndKpis"
+                "legacyStockPrices"
+                "request"];
+            endpoint = [
+                "/v2/companies-list"
+                "/v2/company/profile"
+                "/v2/company/logo"
+                "/v1/company/news"
+                "/v1/company/financials/{statementType}/as-reported"
+                "/v1/company/financials/{statementType}/standardized"
+                "/v1/standardized-metrics-list and /v1/standardized-metrics-list/{templateType}/{statementType}"
+                "/v1/company/ratios"
+                "/v1/company/ratios/daily/{ratioId}"
+                "/v1/ratios-list"
+                "/v1/company/shares-outstanding"
+                "/v2/company/segments-and-kpis"
+                "/v1/company/adjusted-*"
+                "/v1/company/stock-splits"
+                "/v2/company/stock-prices and /v1/company/stock-prices/intraday"
+                "/v2/company/filings"
+                "/v1/filing/{filingId}/..."
+                "/v1/calendar/earnings"
+                "/v1/company/earnings-summary"
+                "/v1/companies-list"
+                "/v1/company/profile"
+                "/v1/company/filings"
+                "/v1/company/segments-and-kpis"
+                "/v1/company/stock-prices"
+                "Any GET endpoint"];
+            status = [
+                repmat("Current", 19, 1)
+                repmat("Deprecated", 5, 1)
+                "Escape hatch"];
+
+            endpoints = table(category, method, endpoint, status, ...
+                VariableNames=["Category", "Method", "Endpoint", "Status"]);
         end
     end
 
@@ -898,6 +1034,15 @@ classdef FiscalAIClient
                 return
             end
 
+            if returnType == "timetable"
+                output = obj.autoConvert(body);
+                if obj.NormalizeTypes
+                    output = obj.normalizeTypes(output);
+                end
+                output = obj.timetableConvert(output);
+                return
+            end
+
             output = obj.autoConvert(body);
             if obj.NormalizeTypes
                 output = obj.normalizeTypes(output);
@@ -938,6 +1083,67 @@ classdef FiscalAIClient
                 error("fiscalai:CannotConvertToTable", ...
                     "The response is nested or irregular and cannot be converted to a table.");
             end
+        end
+
+        function output = timetableConvert(obj, value)
+            if istimetable(value)
+                output = value;
+            elseif istable(value)
+                output = obj.tableToTimetable(value);
+            elseif isstruct(value) && isscalar(value) && isfield(value, "data") && istable(value.data)
+                output = value;
+                output.data = obj.tableToTimetable(value.data);
+            elseif obj.isFlatStruct(value)
+                output = obj.tableToTimetable(struct2table(value));
+            else
+                error("fiscalai:CannotConvertToTimetable", ...
+                    "Response cannot be converted to a timetable. Use ReturnType=""auto"" or ReturnType=""table"".");
+            end
+        end
+
+        function output = tableToTimetable(obj, input)
+            if istimetable(input)
+                output = input;
+                return
+            end
+
+            tableData = obj.normalizeTable(input);
+            names = string(tableData.Properties.VariableNames);
+            preferredNames = ["date", "reportDate", "earningsFilingDate", ...
+                "lastSourceFilingDate"];
+            timeName = "";
+
+            for name = preferredNames
+                matches = names(strcmpi(names, name));
+                if ~isempty(matches)
+                    candidate = matches(1);
+                    tableData.(candidate) = obj.toDatetime(tableData.(candidate));
+                    if isdatetime(tableData.(candidate))
+                        timeName = candidate;
+                        break
+                    end
+                end
+            end
+
+            if strlength(timeName) == 0
+                for idx = 1:numel(names)
+                    candidate = names(idx);
+                    if obj.isDateField(candidate)
+                        tableData.(candidate) = obj.toDatetime(tableData.(candidate));
+                        if isdatetime(tableData.(candidate))
+                            timeName = candidate;
+                            break
+                        end
+                    end
+                end
+            end
+
+            if strlength(timeName) == 0
+                error("fiscalai:CannotConvertToTimetable", ...
+                    "Response table does not include a date-like variable for timetable row times.");
+            end
+
+            output = table2timetable(tableData, "RowTimes", char(timeName));
         end
 
         function tf = isTableConvertible(obj, value)

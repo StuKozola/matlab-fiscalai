@@ -18,7 +18,9 @@ function [results, coverageResult] = runCoverage(reportFolder)
     import matlab.unittest.plugins.codecoverage.CoverageReport
     import matlab.unittest.plugins.codecoverage.CoverageResult
 
-    suite = testsuite(fullfile(projectRoot, "tests", "FiscalAIClientTest.m"));
+    suite = [ ...
+        testsuite(fullfile(projectRoot, "tests", "FiscalAIClientTest.m")), ...
+        testsuite(fullfile(projectRoot, "tests", "FiscalAIWorkflowTest.m"))];
     coverageFormat = CoverageResult;
     runner = TestRunner.withTextOutput;
     runner.addPlugin(CodeCoveragePlugin.forFolder( ...

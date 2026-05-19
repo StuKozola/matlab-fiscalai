@@ -1,0 +1,28 @@
+name: MATLAB Live Smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 13 * * 1'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      FISCALAI_API_KEY: ${{ secrets.FISCALAI_API_KEY }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          release: latest
+
+      - name: Run live smoke tests
+        uses: matlab-actions/run-command@v2
+        with:
+          command: assert(strlength(getenv('FISCALAI_API_KEY')) > 0, 'FISCALAI_API_KEY secret is not configured'); addpath('src'); addpath('tools'); results = smokeFiscalAI(); assert(all(strcmp(results.Status,'passed')), evalc('disp(results)'))

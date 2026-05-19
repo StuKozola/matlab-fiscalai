@@ -17,6 +17,7 @@ client = fiscalai.FiscalAIClient(ApiKey="YOUR_API_KEY");
 client = fiscalai.FiscalAIClient(SecretName="FISCALAI_API_KEY");
 client = fiscalai.FiscalAIClient(); % reads FISCALAI_API_KEY from Vault, then env
 client = fiscalai.FiscalAIClient(NormalizeTypes=true);
+client = fiscalai.FiscalAIClient(ReturnType="timetable");
 ```
 
 The client also reads a local `.env` file by default after Vault and environment lookup:
@@ -43,15 +44,15 @@ prices = client.stockPrices( ...
     CompanyKey="NASDAQ_MSFT", StartDate="2025-01-01", EndDate="2025-12-31");
 ```
 
-Most list and time-series responses are converted to `table` values when the response shape is flat. Nested responses are returned as structs unless `ReturnType="table"` is requested and conversion is possible. Set `NormalizeTypes=true` to conservatively convert date-like fields to `datetime`, text fields to `string`, and obvious numeric text fields to doubles.
+Most list and time-series responses are converted to `table` values when the response shape is flat. Nested responses are returned as structs unless `ReturnType="table"` is requested and conversion is possible. Set `ReturnType="timetable"` for date-indexed time series or period rows. Set `NormalizeTypes=true` to conservatively convert date-like fields to `datetime`, text fields to `string`, and obvious numeric text fields to doubles.
 
-Runnable workflows are available in `examples/`, including financial statement analysis, ratio screening, filing downloads, earnings calendars, stock prices, and binary assets.
+Runnable workflows are available in `examples/`, including financial statement analysis, ratio screening, filing downloads, earnings calendars, stock prices, and binary assets. Reusable workflow functions live in `src/+fiscalai/+workflows/`.
 
 ## Endpoint Coverage
 
-`fiscalai.FiscalAIClient` includes wrappers for companies, profiles, as-reported and standardized financials, standardized metrics, ratios, shares outstanding, adjusted metrics, segments and KPIs, stock splits, stock prices, filings, filing images/PDFs, logos, company news, earnings calendar, and earnings summary. Use `client.request("/path", Query=struct(...))` for new Fiscal.ai endpoints before a dedicated wrapper exists.
+`fiscalai.FiscalAIClient` includes wrappers for companies, profiles, as-reported and standardized financials, standardized metrics, ratios, shares outstanding, adjusted metrics, segments and KPIs, stock splits, stock prices, filings, filing images/PDFs, logos, company news, earnings calendar, and earnings summary. Use `fiscalai.FiscalAIClient.endpointCatalog()` to inspect wrapper coverage. Use `client.request("/path", Query=struct(...))` for new Fiscal.ai endpoints before a dedicated wrapper exists.
 
-See [docs/API_REFERENCE.md](docs/API_REFERENCE.md) for the method-to-endpoint map and return-shape notes. See [docs/METHOD_HELP.md](docs/METHOD_HELP.md) for generated method help.
+See [docs/QUICKSTART.md](docs/QUICKSTART.md) to get started, [docs/API_REFERENCE.md](docs/API_REFERENCE.md) for the method-to-endpoint map and return-shape notes, [docs/API_EXAMPLES.md](docs/API_EXAMPLES.md) for endpoint-family examples, and [docs/METHOD_HELP.md](docs/METHOD_HELP.md) for generated method help.
 
 Binary endpoints return bytes and metadata, and can write directly to a file:
 
@@ -66,6 +67,13 @@ Run unit tests without a live API key:
 
 ```matlab
 results = runtests("tests/FiscalAIClientTest.m");
+assertSuccess(results)
+```
+
+Run workflow unit tests:
+
+```matlab
+results = runtests("tests/FiscalAIWorkflowTest.m");
 assertSuccess(results)
 ```
 
@@ -107,4 +115,6 @@ The package is written to `output/matlab-fiscalai.mltbx`, which is ignored by Gi
 
 ## Release Automation
 
-Use the `MATLAB Release` GitHub Actions workflow to package and publish a release. Provide a semantic version without the leading `v`, for example `0.2.0`. The workflow runs unit tests, Code Analyzer, packages the toolbox, tags the commit, creates the GitHub release, and uploads the `.mltbx` asset.
+Use the `MATLAB Release` GitHub Actions workflow to package and publish a release. Provide a semantic version without the leading `v`, for example `0.3.0`. The workflow runs unit tests, Code Analyzer, packages the toolbox, tags the commit, creates the GitHub release, and uploads the `.mltbx` asset.
+
+The `MATLAB Live Smoke` workflow also runs on a weekly schedule and can be started manually. It requires the `FISCALAI_API_KEY` repository secret.

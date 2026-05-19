@@ -72,6 +72,22 @@ classdef FiscalAIClientTest < matlab.unittest.TestCase
             testCase.verifyClass(result.data, "table");
         end
 
+        function testGenericFinancialsWrapperBuildsPath(testCase)
+            transport = MockTransport(FiscalAIClientTest.response(200, ...
+                '{"data":[{"periodType":"Annual","cash":10}]}'));
+            client = fiscalai.FiscalAIClient(ApiKey="test-key", Transport=@transport.send);
+
+            result = client.standardizedFinancials( ...
+                "cash-flow-statement", CompanyKey="NASDAQ_MSFT", ...
+                PeriodType="annual", IncludeReportingTemplates=true);
+
+            testCase.verifySubstring(transport.Calls(1).Url, ...
+                "/v1/company/financials/cash-flow-statement/standardized");
+            testCase.verifySubstring(transport.Calls(1).Url, "periodType=annual");
+            testCase.verifySubstring(transport.Calls(1).Url, "includeReportingTemplates=true");
+            testCase.verifyClass(result.data, "table");
+        end
+
         function testFinancialMetricValuesFlattenToTable(testCase)
             transport = MockTransport(FiscalAIClientTest.response(200, ...
                 '{"metrics":[{"standardizedMetricId":"revenue"}],"data":[{"periodType":"Annual","reportDate":"2026-03-15","metricsValues":{"revenue":{"value":10,"currency":"USD"},"grossProfit":{"value":4,"currency":"USD"}}},{"periodType":"Quarterly","reportDate":"2026-06-15","metricsValues":{"revenue":{"value":3,"currency":"USD"}}}]}'));
@@ -176,6 +192,27 @@ classdef FiscalAIClientTest < matlab.unittest.TestCase
             testCase.verifyClass(result.earningsFilingDate, "datetime");
             testCase.verifyEqual(result.calendarYear, 2026);
             testCase.verifyEqual(result.ticker, "MSFT");
+        end
+
+        function testReturnTypeTimetableConvertsDateRows(testCase)
+            transport = MockTransport(FiscalAIClientTest.response(200, ...
+                '[{"date":"2026-03-15","close_price":"101.5","volume":"200"}]'));
+            client = fiscalai.FiscalAIClient(ApiKey="test-key", Transport=@transport.send);
+
+            result = client.stockPrices(CompanyKey="NASDAQ_MSFT", ReturnType="timetable");
+
+            testCase.verifyClass(result, "timetable");
+            testCase.verifyEqual(result.Properties.RowTimes(1), datetime("2026-03-15"));
+            testCase.verifyEqual(result.close_price(1), 101.5);
+            testCase.verifyEqual(result.volume(1), 200);
+        end
+
+        function testEndpointCatalogListsWrappers(testCase)
+            catalog = fiscalai.FiscalAIClient.endpointCatalog();
+
+            testCase.verifyClass(catalog, "table");
+            testCase.verifyTrue(any(catalog.Endpoint == "/v2/companies-list"));
+            testCase.verifyTrue(any(catalog.Method == "standardizedFinancials"));
         end
 
         function testRateLimitMapsToError(testCase)

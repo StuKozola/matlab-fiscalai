@@ -4,7 +4,7 @@ function outputFile = packageToolbox(outputFile, options)
     arguments
         outputFile (1,1) string = fullfile( ...
             fileparts(fileparts(mfilename("fullpath"))), "output", "matlab-fiscalai.mltbx")
-        options.Version (1,1) string = "0.2.0"
+        options.Version (1,1) string = "0.3.0"
     end
 
     projectRoot = fileparts(fileparts(mfilename("fullpath")));

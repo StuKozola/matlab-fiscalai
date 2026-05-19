@@ -6,6 +6,7 @@ function results = smokeFiscalAI()
     client = fiscalai.FiscalAIClient(EnvFile=fullfile(projectRoot, ".env"));
 
     checks = [
+        "endpointCatalog"
         "companyProfile"
         "ratiosList"
         "allStandardizedMetricsList"
@@ -31,6 +32,10 @@ end
 
 function [status, detail] = runCheck(client, checkName)
     switch checkName
+        case "endpointCatalog"
+            catalog = fiscalai.FiscalAIClient.endpointCatalog();
+            status = "passed";
+            detail = "rows=" + string(height(catalog));
         case "companyProfile"
             profile = client.companyProfile(CompanyKey="NASDAQ_MSFT", ReturnType="struct");
             status = "passed";
