@@ -22,6 +22,7 @@ function outputFile = packageToolbox(outputFile)
     opts.ToolboxFiles = [
         fullfile(projectRoot, "src")
         fullfile(projectRoot, "examples")
+        fullfile(projectRoot, "docs")
         fullfile(projectRoot, "README.md")
         fullfile(projectRoot, "AGENTS.md")];
     opts.ToolboxMatlabPath = fullfile(projectRoot, "src");

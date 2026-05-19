@@ -72,6 +72,33 @@ classdef FiscalAIClientTest < matlab.unittest.TestCase
             testCase.verifyClass(result.data, "table");
         end
 
+        function testFinancialMetricValuesFlattenToTable(testCase)
+            transport = MockTransport(FiscalAIClientTest.response(200, ...
+                '{"metrics":[{"standardizedMetricId":"revenue"}],"data":[{"periodType":"Annual","metricsValues":{"revenue":{"value":10,"currency":"USD"},"grossProfit":{"value":4,"currency":"USD"}}},{"periodType":"Quarterly","metricsValues":{"revenue":{"value":3,"currency":"USD"}}}]}'));
+            client = fiscalai.FiscalAIClient(ApiKey="test-key", Transport=@transport.send);
+
+            result = client.standardizedIncomeStatement(CompanyKey="NASDAQ_MSFT");
+
+            testCase.verifyClass(result.data, "table");
+            testCase.verifyEqual(result.data.revenue(1), 10);
+            testCase.verifyEqual(result.data.grossProfit(2), NaN);
+        end
+
+        function testCellStructResponsesConvertToTable(testCase)
+            body = {
+                struct("filingId", "a", "documentType", "10-K")
+                struct("filingId", "b", "documentType", "10-Q")};
+            response = FiscalAIClientTest.response(200, "{}");
+            response.Body = body;
+            transport = MockTransport(response);
+            client = fiscalai.FiscalAIClient(ApiKey="test-key", Transport=@transport.send);
+
+            result = client.companyFilings(CompanyKey="NASDAQ_MSFT");
+
+            testCase.verifyClass(result, "table");
+            testCase.verifyEqual(string(result.filingId(2)), "b");
+        end
+
         function testStandardizedMetricsListEncodesPath(testCase)
             transport = MockTransport(FiscalAIClientTest.response(200, ...
                 '[{"metricId":"revenue"},{"metricId":"ebitda"}]'));

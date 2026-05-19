@@ -46,17 +46,25 @@ function [status, detail] = runCheck(client, checkName)
         case "stockPricesLatest"
             prices = client.stockPrices(CompanyKey="NASDAQ_MSFT", Latest=true, ReturnType="struct");
             status = "passed";
-            detail = "items=" + string(numel(prices));
+            detail = "items=" + countItems(prices);
         case "companyFilings"
-            filings = client.companyFilings(CompanyKey="NASDAQ_MSFT", ReturnType="struct");
+            filings = client.companyFilings(CompanyKey="NASDAQ_MSFT");
             status = "passed";
-            detail = "items=" + string(numel(filings));
+            detail = "items=" + countItems(filings);
         case "earningsCalendar"
             calendar = client.earningsCalendar(Tickers="MSFT", PageSize=5, ReturnType="struct");
             status = "passed";
-            detail = "items=" + string(numel(calendar));
+            detail = "items=" + countItems(calendar);
         otherwise
             status = "skipped";
             detail = "Unknown check";
+    end
+end
+
+function value = countItems(data)
+    if istable(data)
+        value = string(height(data));
+    else
+        value = string(numel(data));
     end
 end

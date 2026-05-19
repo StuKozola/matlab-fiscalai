@@ -893,9 +893,17 @@ classdef FiscalAIClient
         end
 
         function output = autoConvert(obj, body)
-            if isstruct(body) && isfield(body, "data") && obj.isFlatStruct(body.data)
+            if isstruct(body) && isfield(body, "data") && obj.hasMetricValues(body.data)
+                body.data = obj.metricDataToTable(body.data);
+                output = body;
+            elseif isstruct(body) && isfield(body, "data") && obj.isFlatStruct(body.data)
                 body.data = struct2table(body.data);
                 output = body;
+            elseif isstruct(body) && isfield(body, "data") && obj.isStructCell(body.data)
+                body.data = obj.cellStructToTable(body.data);
+                output = body;
+            elseif obj.isStructCell(body)
+                output = obj.cellStructToTable(body);
             elseif obj.isTableConvertible(body)
                 output = struct2table(body);
             else
@@ -904,8 +912,14 @@ classdef FiscalAIClient
         end
 
         function output = forceTable(obj, body)
-            if isstruct(body) && isfield(body, "data") && obj.isFlatStruct(body.data)
+            if isstruct(body) && isfield(body, "data") && obj.hasMetricValues(body.data)
+                output = obj.metricDataToTable(body.data);
+            elseif isstruct(body) && isfield(body, "data") && obj.isFlatStruct(body.data)
                 output = struct2table(body.data);
+            elseif isstruct(body) && isfield(body, "data") && obj.isStructCell(body.data)
+                output = obj.cellStructToTable(body.data);
+            elseif obj.isStructCell(body)
+                output = obj.cellStructToTable(body);
             elseif obj.isFlatStruct(body)
                 output = struct2table(body);
             else
@@ -941,6 +955,85 @@ classdef FiscalAIClient
                 tf = any(cellfun(@(item) obj.isNestedValue(item), value(:)));
             else
                 tf = false;
+            end
+        end
+
+        function tf = isStructCell(~, value)
+            tf = iscell(value) && ~isempty(value) && all(cellfun(@(item) isstruct(item) && isscalar(item), value(:)));
+        end
+
+        function output = cellStructToTable(~, value)
+            allNames = strings(0, 1);
+            for idx = 1:numel(value)
+                allNames = [allNames; string(fieldnames(value{idx}))]; %#ok<AGROW>
+            end
+            allNames = unique(allNames, "stable");
+            variableNames = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName(allNames));
+            cells = cell(numel(value), numel(allNames));
+            for rowIdx = 1:numel(value)
+                for nameIdx = 1:numel(allNames)
+                    name = allNames(nameIdx);
+                    if isfield(value{rowIdx}, name)
+                        cells{rowIdx, nameIdx} = value{rowIdx}.(name);
+                    else
+                        cells{rowIdx, nameIdx} = [];
+                    end
+                end
+            end
+            output = cell2table(cells, VariableNames=cellstr(variableNames));
+        end
+
+        function tf = hasMetricValues(~, value)
+            tf = isstruct(value) && ~isempty(value) && ...
+                (isfield(value, "metricValues") || isfield(value, "metricsValues"));
+        end
+
+        function output = metricDataToTable(obj, value)
+            rows = cell(numel(value), 1);
+            metricNames = strings(0, 1);
+            for rowIdx = 1:numel(value)
+                row = struct();
+                names = string(fieldnames(value(rowIdx)));
+                for nameIdx = 1:numel(names)
+                    name = names(nameIdx);
+                    fieldValue = value(rowIdx).(name);
+                    if name == "metricValues" || name == "metricsValues"
+                        [row, metricNames] = obj.addMetricFields(row, fieldValue, metricNames);
+                    elseif ~obj.isNestedValue(fieldValue)
+                        row.(matlab.lang.makeValidName(name)) = fieldValue;
+                    end
+                end
+                rows{rowIdx} = row;
+            end
+
+            metricNames = unique(metricNames, "stable");
+            for rowIdx = 1:numel(rows)
+                for metricIdx = 1:numel(metricNames)
+                    metricName = metricNames(metricIdx);
+                    if ~isfield(rows{rowIdx}, metricName)
+                        rows{rowIdx}.(metricName) = NaN;
+                    end
+                end
+            end
+            output = struct2table(vertcat(rows{:}));
+        end
+
+        function [row, metricNames] = addMetricFields(obj, row, metrics, metricNames)
+            names = string(fieldnames(metrics));
+            for idx = 1:numel(names)
+                matlabName = string(matlab.lang.makeValidName(names(idx)));
+                row.(matlabName) = obj.metricScalarValue(metrics.(names(idx)));
+                metricNames(end + 1, 1) = matlabName; %#ok<AGROW>
+            end
+        end
+
+        function value = metricScalarValue(~, metricValue)
+            if isstruct(metricValue) && isfield(metricValue, "value")
+                value = metricValue.value;
+            elseif isnumeric(metricValue) || islogical(metricValue) || ischar(metricValue) || isstring(metricValue)
+                value = metricValue;
+            else
+                value = NaN;
             end
         end
 

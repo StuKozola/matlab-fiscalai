@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      run_integration:
+        description: Run live Fiscal.ai integration tests
+        required: false
+        default: false
+        type: boolean
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -31,3 +37,22 @@ jobs:
         uses: matlab-actions/run-command@v2
         with:
           command: issues = [checkcode('src/+fiscalai/FiscalAIClient.m','-struct'); checkcode('tests/FiscalAIClientTest.m','-struct'); checkcode('tests/FiscalAIIntegrationTest.m','-struct'); checkcode('tests/helpers/MockTransport.m','-struct'); checkcode('tools/packageToolbox.m','-struct'); checkcode('tools/smokeFiscalAI.m','-struct')]; assert(isempty(issues), evalc('disp(issues)'))
+
+  live-integration:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_integration
+    runs-on: ubuntu-latest
+    env:
+      FISCALAI_API_KEY: ${{ secrets.FISCALAI_API_KEY }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          release: latest
+
+      - name: Run live integration tests
+        uses: matlab-actions/run-command@v2
+        with:
+          command: assert(strlength(getenv('FISCALAI_API_KEY')) > 0, 'FISCALAI_API_KEY secret is not configured'); addpath('src'); results = runtests('tests/FiscalAIIntegrationTest.m'); assertSuccess(results)
